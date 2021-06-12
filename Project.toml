@@ -1,0 +1,10 @@
+name = "SprawlConnectivity"
+uuid = "fd34372b-f7b7-4d75-b80b-842eb69079f2"
+authors = ["michael catchen <michael.catchen@colorado.edu>"]
+version = "0.1.0"
+
+[deps]
+DynamicGrids = "a5dba43e-3abc-5203-bfc5-584ca68d3f5b"
+RasterDataSources = "3cb90ccd-e1b6-4867-9617-4276c8b2ca36"
+SimpleSDMLayers = "2c645270-77db-11e9-22c3-0f302a89c64c"
+Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9"
