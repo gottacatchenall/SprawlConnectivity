@@ -3,11 +3,15 @@ module SprawlConnectivity
 using DynamicGrids
 using DynamicGrids: CellRule, SetCellRule, applyrule, Rule, Ruleset,Neighborhood,Moore;
 using ColorSchemes, Colors, BenchmarkTools
-const URBAN, RURAL, FOREST = 1, 2, 3
 
-include(joinpath("urbangrowth.jl"));
+include(joinpath("FUTURES", "demand.jl"));
+include(joinpath("FUTURES", "patchgrowing.jl"));
+include(joinpath("FUTURES", "potential.jl"));
+include(joinpath("FUTURES", "FUTURES.jl"));
+
+
 include(joinpath("forms.jl"));
-include(joinpath("demand.jl"));
+include(joinpath("urbangrowth.jl"));
 
 
 end # module
