@@ -1,0 +1,131 @@
+---
+title: Prototype modeling the effect of urban growth on forest fragmentation
+author: michael catchen
+table-of-contents: true
+---
+
+
+# Download and setup landcover data  
+
+We'll start by loading the libraries we'll use 
+```julia;
+using SprawlConnectivity
+using SimpleSDMLayers
+using SimpleSDMLayers: SimpleSDMPredictor, EarthEnv, LandCover
+using Plots
+using Colors, ColorSchemes
+```
+
+Download data sources
+```julia;
+
+const URBAN,EVERDECID,EVERGREEN,DECIDUOUS,MIXEDFOREST,AGRICULTURE,WATER = 1:7
+
+
+# this line downloads a bunch of rasters 
+# if you don't have cached in ENV["RASTERDATASOURCES_PATH"], might take some time 
+ENV["RASTERDATASOURCES_PATH"] = "/home/michael/data/";
+layers = [9,1,2,3,4,7,12];
+cmap = ["black", "salmon1", "darkolivegreen1", "springgreen", "palegreen3", "seagreen4", "bisque", "dodgerblue"];
+cscheme = ColorScheme([color(i) for i in cmap ]);
+
+```
+
+Do a quick consensus landcover 
+```julia;
+
+mtl = (bottom=43., left=-77.6, right=-70., top=48.);
+landcover = convert.(Float32, SimpleSDMPredictor(EarthEnv, LandCover, layers; full=false, mtl...)) 
+consensus = mosaic(x -> last(findmax(x)), landcover)
+heatmap(consensus, c=cmap[2:end], frame=:box, legend=:none, aspectratio=1)
+``` 
+
+```julia;
+
+metro = (bottom=42., left=-80, right=-70., top=50.);
+landcover = convert.(Float32, SimpleSDMPredictor(EarthEnv, LandCover, layers; full=false, metro...)) 
+consensus = mosaic(x -> last(findmax(x)), landcover)
+heatmap(consensus, c=cmap[2:end], frame=:box, legend=:none, aspectratio=1)
+``` 
+
+Now look at the strength of urban cover only. We'll use this a
+proxy for _development potential_ as used in the model of urban growth
+proposed by [@cite].
+
+ 
+
+# Defining a cellular-automata model of urban growth
+
+Here we'll build a simulation model of landscape change using
+[DynamicGrids.jl](todolink).
+```julia;
+using DynamicGrids;
+using DynamicGrids: NeighborhoodRule;
+```
+
+## Define the rule
+
+Define a rule as a type. 
+```julia;
+struct SprawlRule{R,W,NT,CT,FT} <: NeighborhoodRule{R,W}
+    neighborhood::NT
+    cityinvasionprob::CT
+    farminvasionprob::FT
+end 
+SprawlRule{R,W}(; neighborhood=Moore(1), cityinvasionprob=0.01, farminvasionprob=0.005) where {R,W} = SprawlRule{R,W}(neighborhood, cityinvasionprob, farminvasionprob)
+```
+
+## Define the rule's behavior
+
+Define the function that describes how the rule is applied at each timestep.
+```julia;
+
+forest = [EVERDECID, EVERGREEN, DECIDUOUS,MIXEDFOREST]
+
+function DynamicGrids.applyrule(data, rule::SprawlRule{R,W}, cell, index) where {R,W}
+    cell == WATER && return WATER
+    cell == URBAN && return URBAN
+
+    if cell ∈ forest
+        if AGRICULTURE in neighbors(rule)
+            return (rand() <= rule.farminvasionprob ? AGRICULTURE : cell)
+        else
+            return cell
+        end
+    else
+        if URBAN in neighbors(rule)
+            return (rand() <= rule.cityinvasionprob ? URBAN : AGRICULTURE)
+        else
+            return AGRICULTURE
+        end
+    end
+    @error "got an invalid cell value $cell as input"
+end 
+```
+
+## Run the simulation
+Now run this simple simulation
+
+```julia;
+init = Matrix{Int64}(consensus.grid)
+output = GifOutput(init[end:-1:1,1:1:end];  # flip initial condition because gif flips the output for some reason
+    filename="./examples/northeast_sprawl.gif", 
+    tspan=1:200, fps=25, 
+    scheme=cscheme, minval=0, maxval=7)
+
+rule = SprawlRule(neighborhood=VonNeumann(15),cityinvasionprob=0.005, farminvasionprob=0.005)
+sim!(output, rule)
+```
+
+![todo](./examples/mtlsprawl.gif)
+
+# Measuring the effect of urban spread on fragmentation across spatial scale
+
+Now we want to determine how sprawl effects the structure of the Saint Lawrence lowlands
+forest structure. 
+
+
+
+
+using Weave
+weave("./examples/mtl.jmd", css="./assets/weave.css", pandoc_options=["-toc"])
