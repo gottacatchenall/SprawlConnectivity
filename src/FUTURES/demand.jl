@@ -14,13 +14,16 @@
     A demand model for FuturesSprawlModel
 
 """
-struct DemandModel{FT,TT}
-    map::FT
-    target::TT 
+abstract type DemandModel end 
+
+struct ConstantDemandModel{T}
+    constant::T
 end 
+ConstantDemandModel(; constant=10. ) = ConstantDemandModel(constant)
 
-function getdemand(dm::DemandModel)
 
+function getdemand(dm::ConstantDemandModel)
+    return dm.constant
 end
 
 

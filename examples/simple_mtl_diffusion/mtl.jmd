@@ -23,7 +23,7 @@ const URBAN,EVERDECID,EVERGREEN,DECIDUOUS,MIXEDFOREST,AGRICULTURE,WATER = 1:7
 
 
 # this line downloads a bunch of rasters 
-# if you don't have cached in ENV["RASTERDATASOURCES_PATH"], might take some time 
+# if you don't have it cached in ENV["RASTERDATASOURCES_PATH"], it might take some time 
 ENV["RASTERDATASOURCES_PATH"] = "/home/michael/data/";
 layers = [9,1,2,3,4,7,12];
 cmap = ["black", "salmon1", "darkolivegreen1", "springgreen", "palegreen3", "seagreen4", "bisque", "dodgerblue"];
@@ -33,26 +33,11 @@ cscheme = ColorScheme([color(i) for i in cmap ]);
 
 Do a quick consensus landcover 
 ```julia;
-
-mtl = (bottom=43., left=-77.6, right=-70., top=48.);
-landcover = convert.(Float32, SimpleSDMPredictor(EarthEnv, LandCover, layers; full=false, mtl...)) 
-consensus = mosaic(x -> last(findmax(x)), landcover)
-heatmap(consensus, c=cmap[2:end], frame=:box, legend=:none, aspectratio=1)
-``` 
-
-```julia;
-
 metro = (bottom=42., left=-80, right=-70., top=50.);
 landcover = convert.(Float32, SimpleSDMPredictor(EarthEnv, LandCover, layers; full=false, metro...)) 
-consensus = mosaic(x -> last(findmax(x)), landcover)
+consensus = mosaic(x -> last(findmax(x)), landcover) # this is not the most efficient way to do this but works for now
 heatmap(consensus, c=cmap[2:end], frame=:box, legend=:none, aspectratio=1)
 ``` 
-
-Now look at the strength of urban cover only. We'll use this a
-proxy for _development potential_ as used in the model of urban growth
-proposed by [@cite].
-
- 
 
 # Defining a cellular-automata model of urban growth
 
@@ -109,7 +94,7 @@ Now run this simple simulation
 ```julia;
 init = Matrix{Int64}(consensus.grid)
 output = GifOutput(init[end:-1:1,1:1:end];  # flip initial condition because gif flips the output for some reason
-    filename="./examples/northeast_sprawl.gif", 
+    filename="./examples/regional_sprawl.gif", 
     tspan=1:200, fps=25, 
     scheme=cscheme, minval=0, maxval=7)
 
@@ -119,12 +104,11 @@ sim!(output, rule)
 
 ![todo](./examples/mtlsprawl.gif)
 
-# Measuring the effect of urban spread on fragmentation across spatial scale
 
-Now we want to determine how sprawl effects the structure of the Saint Lawrence lowlands
-forest structure. 
-
-
+The next step would be to measure the effect of urban spread on fragmentation across spatial 
+scale. We could do this by dropping randomly places circles with radius $r$ in a region of 
+the St Lawrence lowlands and measure how forest cover changes across scale over time has
+urban sprawl occurs. 
 
 
 using Weave

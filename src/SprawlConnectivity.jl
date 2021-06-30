@@ -1,13 +1,18 @@
 module SprawlConnectivity
 
 using DynamicGrids
-using DynamicGrids: CellRule, SetCellRule, applyrule, Rule, Ruleset,Neighborhood,Moore;
+using DynamicGrids: CellRule, SetCellRule, applyrule, offsets, Rule,Ruleset,Neighborhood,Moore;
 using ColorSchemes, Colors, BenchmarkTools
+using Distributions
 
 include(joinpath("FUTURES", "demand.jl"));
 include(joinpath("FUTURES", "patchgrowing.jl"));
 include(joinpath("FUTURES", "potential.jl"));
 include(joinpath("FUTURES", "FUTURES.jl"));
+
+export ConstantDemandModel
+export getpotential, getdemand, getseed, growpatch!
+export FuturesSprawlModel;
 
 
 include(joinpath("forms.jl"));
